@@ -252,7 +252,7 @@ function renderBookmark(bookmark) {
         <div class="bookmarkRow" bookmark_id="${bookmark.Id}">
             <div class="bookmarkContainer noselect">
                 <div class="bookmarkLayout">
-                    <a href="${bookmark.Url}" class="small favicon"
+                    <a href="${bookmark.Url}" target="_blank" class="small favicon"
                         style="background-image: url('http://www.google.com/s2/favicons?sz=64&domain=${bookmark.Url}');">
                     </a>
                     <span class="bookmarkTitle">${bookmark.Title}</span>
