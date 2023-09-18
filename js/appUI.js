@@ -130,6 +130,7 @@ async function renderDeleteBookmarkForm(id) {
             showWaitingGif();
             let result = await Bookmarks_API.Delete(bookmark.Id);
             if (result) {
+                selectedCategory = null;
                 renderDropDown();
                 renderBookmarks();
             }
@@ -224,6 +225,7 @@ function renderBookmarkForm(bookmark = null) {
         showWaitingGif();
         let result = await Bookmarks_API.Save(bookmark, create);
         if (result) {
+            selectedCategory = null;
             renderDropDown();
             renderBookmarks();
         }
