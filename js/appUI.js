@@ -1,8 +1,10 @@
 //<span class="cmdIcon fa-solid fa-ellipsis-vertical"></span>
 let contentScrollPosition = 0;
+var selectedCategory = null;
 Init_UI();
 
 function Init_UI() {
+    renderDropDown();
     renderBookmarks();
     $('#createBookmark').on("click", async function () {
         saveContentScrollPosition();
@@ -10,9 +12,6 @@ function Init_UI() {
     });
     $('#abort').on("click", async function () {
         renderBookmarks();
-    });
-    $('#aboutCmd').on("click", function () {
-        renderAbout();
     });
 }
 
@@ -130,13 +129,16 @@ async function renderDeleteBookmarkForm(id) {
         $('#deleteBookmark').on("click", async function () {
             showWaitingGif();
             let result = await Bookmarks_API.Delete(bookmark.Id);
-            if (result)
+            if (result) {
                 renderBookmarks();
+                renderDropDown();
+            }
             else
                 renderError("Une erreur est survenue!");
         });
         $('#cancel').on("click", function () {
             renderBookmarks();
+            renderDropDown();
         });
     } else {
         renderError("Favori introuvable!");
@@ -160,10 +162,10 @@ function renderBookmarkForm(bookmark = null) {
     $("#content").append(`
         <form class="form" id="bookmarkForm">
             <div id="bookmarkIcon">`+
-            (bookmark.Url?
-            `<span class="big favicon"style="display: block; background-image: url('http://www.google.com/s2/favicons?sz=64&domain=${bookmark.Url}');"></span>`
-            :`<img src="bookmark.png" class="big" title="Gestionnaire de favoris"></img>`)
-            +`
+        (bookmark.Url ?
+            `<div class="big favicon"style="background-image: url('http://www.google.com/s2/favicons?sz=64&domain=${bookmark.Url}');"></div>`
+            : `<img src="bookmark.png" class="big" title="Gestionnaire de favoris"></img>`)
+        + `
             </div>
             <input type="hidden" name="Id" value="${bookmark.Id}"/>
             <label for="Title" class="form-label">Titre</label>
@@ -206,10 +208,10 @@ function renderBookmarkForm(bookmark = null) {
     initFormValidation();
     $("#Url").on("change", function () {
         $("#bookmarkIcon").empty();
-        console.log($(this).val);
-        if($("#Url").val()) {
-            $("#bookmarkIcon").append(`<span class="big favicon"style="display: block; background-image: url('http://www.google.com/s2/favicons?sz=64&domain=${$(this).val()}');">
-            </span>`);
+        if ($("#Url").val()) {
+            $("#bookmarkIcon").append(`
+                <div class="big favicon"style="background-image: url('http://www.google.com/s2/favicons?sz=64&domain=${$(this).val()}');"></div>
+            `);
         }
         else {
             $("#bookmarkIcon").append(`<img src="bookmark.png" class="big" title="Gestionnaire de favoris"></img>`);
@@ -221,13 +223,16 @@ function renderBookmarkForm(bookmark = null) {
         bookmark.Id = parseInt(bookmark.Id);
         showWaitingGif();
         let result = await Bookmarks_API.Save(bookmark, create);
-        if (result)
+        if (result) {
             renderBookmarks();
+            renderDropDown();
+        }
         else
             renderError("Une erreur est survenue!");
     });
     $('#cancel').on("click", function () {
         renderBookmarks();
+        renderDropDown();
     });
 }
 
@@ -241,21 +246,90 @@ function getFormData($form) {
 }
 
 function renderBookmark(bookmark) {
-    return $(`
-     <div class="bookmarkRow" bookmark_id="${bookmark.Id}">
-        <div class="bookmarkContainer noselect">
-            <div class="bookmarkLayout">
-                <a href="${bookmark.Url}" class="small favicon"
-                    style="background-image: url('http://www.google.com/s2/favicons?sz=64&domain=${bookmark.Url}');">
-                </a>
-                <span class="bookmarkTitle">${bookmark.Title}</span>
-                <span class="bookmarkCategory">${bookmark.Category}</span>
-            </div>
-            <div class="bookmarkCommandPanel">
-                <span class="editCmd cmdIcon fa fa-pencil" editBookmarkId="${bookmark.Id}" title="Modifier ${bookmark.Title}"></span>
-                <span class="deleteCmd cmdIcon fa fa-trash" deleteBookmarkId="${bookmark.Id}" title="Effacer ${bookmark.Title}"></span>
+    if (bookmark.Category == selectedCategory || selectedCategory == null) {
+        return $(`
+        <div class="bookmarkRow" bookmark_id="${bookmark.Id}">
+            <div class="bookmarkContainer noselect">
+                <div class="bookmarkLayout">
+                    <a href="${bookmark.Url}" class="small favicon"
+                        style="background-image: url('http://www.google.com/s2/favicons?sz=64&domain=${bookmark.Url}');">
+                    </a>
+                    <span class="bookmarkTitle">${bookmark.Title}</span>
+                    <span class="bookmarkCategory">${bookmark.Category}</span>
+                </div>
+                <div class="bookmarkCommandPanel">
+                    <span class="editCmd cmdIcon fa fa-pencil" editBookmarkId="${bookmark.Id}" title="Modifier ${bookmark.Title}"></span>
+                    <span class="deleteCmd cmdIcon fa fa-trash" deleteBookmarkId="${bookmark.Id}" title="Effacer ${bookmark.Title}"></span>
+                </div>
             </div>
         </div>
-    </div>
+        `);
+    }
+    return null;
+}
+
+async function renderDropDown() {
+    $(".dropdown").remove();
+    $("#header").append(`
+    <div class="dropdown ms-auto">
+        <div data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="cmdIcon fa fa-ellipsis-vertical"></i>
+        </div>
+        <div class="dropdown-menu noselect" id="DDMenu" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(-193px, 42px);" data-popper-placement="bottom-end">
+            <div class="dropdown-item menuItemLayout">
+                <i class="menuIcon fa `+ (selectedCategory != null ? "fa-fw" : "fa-check") + ` mx-2"></i> Toutes les catégories
+            </div>
+            <div class="dropdown-divider"></div>
+        </div>
+    </div>`);
+
+    let bookmarks = await Bookmarks_API.Get();
+    const categories = [];
+
+    for (bookmark of bookmarks) {
+        if (!categories.includes(bookmark.Category)) {
+            categories.push(bookmark.Category);
+        }
+    }
+
+    categories.sort();
+
+    for (category of categories) {
+        if (category == selectedCategory) {
+            $("#DDMenu").append(`
+            <div class="dropdown-item menuItemLayout category">
+                <i class="menuIcon fa fa-check mx-2"></i>${category}
+            </div>
+            `);
+        } else {
+            $("#DDMenu").append(`
+            <div class="dropdown-item menuItemLayout category">
+                <i class="menuIcon fa fa-fw mx-2"></i>${category}
+            </div>
+            `);
+        }
+    }
+
+    $("#DDMenu").append(`
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" id="aboutCmd">
+            <i class="menuIcon fa fa-info-circle mx-2"></i> À propos...
+        </div>
     `);
+
+    $(".category").on("click", function () {
+        selectedCategory = $(this).text().trim();
+        renderBookmarks();
+        renderDropDown();
+    });
+
+    $("#allCatCmd").on("click", function () {
+        selectedCategory = null;
+        renderBookmarks();
+        renderDropDown();
+    });
+
+    $('#aboutCmd').on("click", function () {
+        renderAbout();
+    });
 }
