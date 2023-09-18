@@ -130,15 +130,15 @@ async function renderDeleteBookmarkForm(id) {
             showWaitingGif();
             let result = await Bookmarks_API.Delete(bookmark.Id);
             if (result) {
-                renderBookmarks();
                 renderDropDown();
+                renderBookmarks();
             }
             else
                 renderError("Une erreur est survenue!");
         });
         $('#cancel').on("click", function () {
-            renderBookmarks();
             renderDropDown();
+            renderBookmarks();
         });
     } else {
         renderError("Favori introuvable!");
@@ -224,15 +224,15 @@ function renderBookmarkForm(bookmark = null) {
         showWaitingGif();
         let result = await Bookmarks_API.Save(bookmark, create);
         if (result) {
-            renderBookmarks();
             renderDropDown();
+            renderBookmarks();
         }
         else
             renderError("Une erreur est survenue!");
     });
     $('#cancel').on("click", function () {
-        renderBookmarks();
         renderDropDown();
+        renderBookmarks();
     });
 }
 
@@ -276,7 +276,7 @@ async function renderDropDown() {
             <i class="cmdIcon fa fa-ellipsis-vertical"></i>
         </div>
         <div class="dropdown-menu noselect" id="DDMenu" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(-193px, 42px);" data-popper-placement="bottom-end">
-            <div class="dropdown-item menuItemLayout">
+            <div class="dropdown-item menuItemLayout" id="allCatCmd">
                 <i class="menuIcon fa `+ (selectedCategory != null ? "fa-fw" : "fa-check") + ` mx-2"></i> Toutes les catégories
             </div>
             <div class="dropdown-divider"></div>
@@ -319,14 +319,14 @@ async function renderDropDown() {
 
     $(".category").on("click", function () {
         selectedCategory = $(this).text().trim();
-        renderBookmarks();
         renderDropDown();
+        renderBookmarks();
     });
 
     $("#allCatCmd").on("click", function () {
         selectedCategory = null;
-        renderBookmarks();
         renderDropDown();
+        renderBookmarks();
     });
 
     $('#aboutCmd').on("click", function () {
