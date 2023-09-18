@@ -1,4 +1,3 @@
-//<span class="cmdIcon fa-solid fa-ellipsis-vertical"></span>
 let contentScrollPosition = 0;
 var selectedCategory = null;
 Init_UI();
